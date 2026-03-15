@@ -8,11 +8,13 @@ jobs:
       - uses: actions/checkout@v4
       
       # Markdown linting
-      - uses: DavidAnson/markdownlint-cli2-action@v22
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v22
         with:
           globs: '**/*.md'
       
       # Bash linting
-      - uses: ludeeus/action-shellcheck@master
+      - name: Lint Bash Scripts
+        uses: ludeeus/action-shellcheck@master
         with:
           scandir: '.'
