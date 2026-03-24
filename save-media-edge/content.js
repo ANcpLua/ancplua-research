@@ -63,11 +63,11 @@ new MutationObserver(() => {
 
 function findMedia(el) {
     let cur = el;
-    while (cur && cur !== document.body) {
+    for (let depth = 0; cur && cur !== document.body && depth < 6; depth++) {
         const r = extract(cur);
         if (r) return r;
         for (const tag of ['video', 'img']) {
-            const child = cur.querySelector(tag);
+            const child = cur.querySelector(`:scope > ${tag}, :scope > * > ${tag}`);
             if (child) { const r2 = extract(child); if (r2) return r2; }
         }
         cur = cur.parentElement;
@@ -79,8 +79,11 @@ function extract(el) {
     const tag = el.tagName?.toLowerCase();
 
     if (tag === 'img' || tag === 'picture') {
+        const nearbyVideo = el.parentElement?.querySelector('video');
+        if (nearbyVideo) return extract(nearbyVideo);
         const img = tag === 'picture' ? el.querySelector('img') : el;
         if (!img) return null;
+        if (isJunk(img)) return null;
         const url = enhanceUrl(bestSrc(img));
         return url ? { url, name: nameFrom(url, 'image.png') } : null;
     }
@@ -132,6 +135,15 @@ function bestSrc(img) {
         if (v) return v;
     }
     return img.src || img.currentSrc;
+}
+
+function isJunk(img) {
+    const src = (img.src || img.currentSrc || '').toLowerCase();
+    if (/\.svg(\?|$)/.test(src)) return true;
+    if (/logo|icon|favicon|sprite|placeholder|avatar|badge|emoji/.test(src)) return true;
+    if (img.naturalWidth && img.naturalWidth < 50) return true;
+    if (img.naturalHeight && img.naturalHeight < 50) return true;
+    return false;
 }
 
 function videoSrc(el) {
